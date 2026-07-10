@@ -1,0 +1,131 @@
+[gd_scene format=3 uid="uid://dh6f1vwijk4b3"]
+
+[ext_resource type="Script" uid="uid://bwc6j8moyyfhx" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://yeigfeyo2hcq" path="res://scripts/add_collisions.gd" id="2_collision"]
+[ext_resource type="PackedScene" uid="uid://ctnx0m2na88b4" path="res://resources/Models/灰烬峡谷Demo1.0.0.glb" id="3_model"]
+[ext_resource type="Script" uid="uid://c2rple7moiqkw" path="res://scripts/enemy_spawner.gd" id="4_spawner"]
+[ext_resource type="PackedScene" uid="uid://cj2mrlk1x4h41" path="res://scenes/Enemy.tscn" id="5_e1085"]
+[ext_resource type="PackedScene" path="res://scenes/AmmoBox.tscn" id="7_ammo"]
+[ext_resource type="PackedScene" path="res://scenes/StorageBox.tscn" id="8_storage_box"]
+[ext_resource type="PackedScene" uid="uid://3so40yh2wwh2" path="res://scenes/ExtractionZone.tscn" id="9_extraction"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(500, 1, 500)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+material = SubResource("StandardMaterial3D_ground")
+size = Vector3(500, 1, 500)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+
+[node name="Main" type="Node3D" unique_id=1150185199]
+script = ExtResource("2_collision")
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=475997978]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=587335679]
+shape = SubResource("BoxShape3D_ground")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground" unique_id=2078797094]
+mesh = SubResource("BoxMesh_ground")
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=389404939]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+collision_layer = 2
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1895095042]
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="CameraPivot" type="Node3D" parent="Player" unique_id=1399092998]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Player/CameraPivot" unique_id=413610864]
+current = true
+fov = 70.0
+near = 0.1
+far = 1000.0
+
+[node name="RayCast3D" type="RayCast3D" parent="Player/CameraPivot/Camera3D" unique_id=1488334266]
+target_position = Vector3(0, 0, -100)
+collision_mask = 2
+
+[node name="GunMuzzle" type="Node3D" parent="Player/CameraPivot/Camera3D" unique_id=1131439503]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.2, -0.5)
+
+[node name="InteractRaycast" type="RayCast3D" parent="Player/CameraPivot/Camera3D" unique_id=1597739559]
+target_position = Vector3(0, 0, -100)
+collision_mask = 4
+
+[node name="WeaponPivot" type="Node3D" parent="Player/CameraPivot" unique_id=888888888]
+
+[node name="AshRavine" parent="." unique_id=121524548 instance=ExtResource("3_model")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=135962821]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=567038392]
+environment = SubResource("Environment_main")
+
+[node name="EnemySpawner" type="Node3D" parent="." unique_id=999999999]
+script = ExtResource("4_spawner")
+enemy_scene = ExtResource("5_e1085")
+
+[node name="AmmoBox" parent="." unique_id=590098001 instance=ExtResource("7_ammo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -3)
+
+[node name="AmmoBox2" parent="." unique_id=1668343672 instance=ExtResource("7_ammo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.4, -3)
+
+[node name="AmmoBox3" parent="." unique_id=1663175196 instance=ExtResource("7_ammo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.530285, 0.4, -13.942883)
+
+[node name="AmmoBox4" parent="." unique_id=2051027016 instance=ExtResource("7_ammo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.03216, 0.4, -19.72377)
+
+[node name="AmmoBox5" parent="." unique_id=1781777019 instance=ExtResource("7_ammo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -28.400963)
+
+[node name="AmmoBox6" parent="." unique_id=709897512 instance=ExtResource("7_ammo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.81273, 0.4, 35.858665)
+
+[node name="StorageBox1" parent="." unique_id=36639619 instance=ExtResource("8_storage_box")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -78.03477, 0.3, -11.440032)
+
+[node name="StorageBox2" parent="." unique_id=461351348 instance=ExtResource("8_storage_box")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.015213, 0.3, 1.0691996)
+
+[node name="ExtractionZone" parent="." unique_id=1938744059 instance=ExtResource("9_extraction")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0, -60)
+
+[node name="StorageBox3" parent="." unique_id=467173251 instance=ExtResource("8_storage_box")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -43.89135, 0.3, 26.665539)
+
+[node name="StorageBox4" parent="." unique_id=1079402356 instance=ExtResource("8_storage_box")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56.858738, 0.3, -65.511116)
+
+[node name="StorageBox5" parent="." unique_id=1425891515 instance=ExtResource("8_storage_box")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.06205, 0.3, -5.0818605)
+
+[node name="StorageBox6" parent="." unique_id=523245723 instance=ExtResource("8_storage_box")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55.693832, 0.3, 22.277191)
+
+[node name="StorageBox7" parent="." unique_id=681530813 instance=ExtResource("8_storage_box")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58.020218, 0.3, -94.44372)
+
+[node name="StorageBox8" parent="." unique_id=443337941 instance=ExtResource("8_storage_box")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.015213, 0.3, 97.11348)
+
+[node name="SpawnRoot" type="Node3D" parent="." unique_id=555123457]

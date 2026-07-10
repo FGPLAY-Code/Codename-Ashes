@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://ammo_box_001"]
+
+[ext_resource type="Script" path="res://scripts/ammo_box.gd" id="1"]
+[ext_resource type="PackedScene" path="res://models/ammo_box.glb" id="2_ammo"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ammo"]
+size = Vector3(1, 0.6, 0.6)
+
+[node name="AmmoBox" type="RigidBody3D"]
+script = ExtResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id="ammo_collision"]
+shape = SubResource("BoxShape3D_ammo")
+
+[node name="Model" parent="." instance=ExtResource("2_ammo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)

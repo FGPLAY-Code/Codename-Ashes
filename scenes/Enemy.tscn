@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://cj2mrlk1x4h41"]
+
+[ext_resource type="PackedScene" path="res://models/enemy_soldier.glb" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_55jtl"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_55jtl"]
+radius = 0.4
+height = 4.5
+
+[node name="Enemy" type="CharacterBody3D"]
+script = ExtResource("1_55jtl")
+
+[node name="SoldierMesh" parent="." instance=ExtResource("1_enemy")]
+transform = Transform3D(0, 0, 4.5, 0, 4.5, 0, -4.5, 0, 0, 0, 0, 0)
+
+[node name="MeshContainer" type="Node3D" parent="."]
+
+[node name="MuzzlePos" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, -0.3)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
+shape = SubResource("CapsuleShape3D_55jtl")
