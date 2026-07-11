@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://1ysryz2g407ch"]
+
+[ext_resource type="Script" path="res://scenes/ErrorPopup.gd" id="1_epopup"]
+
+[node name="ErrorPopup" type="CenterContainer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_epopup")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+custom_minimum_size = Vector2(450, 280)
+z_index = 100
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+
+[node name="TitleLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 22
+text = "连接错误"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="MessageLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 16
+text = "错误信息"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ButtonContainer" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+alignment = 2
+
+[node name="RetryButton" type="Button" parent="Panel/VBox/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(120, 50)
+text = "重试"
+
+[node name="BackButton" type="Button" parent="Panel/VBox/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(120, 50)
+text = "上一步"
+
+[connection signal="pressed" from="Panel/VBox/ButtonContainer/RetryButton" to="." method="_on_retry_pressed"]
+[connection signal="pressed" from="Panel/VBox/ButtonContainer/BackButton" to="." method="_on_back_pressed"]

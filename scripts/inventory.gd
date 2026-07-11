@@ -1,406 +1,64 @@
-extends PanelContainer
+extends Control
 
-## 背包库存 UI — Win11 Mica/Acrylic 设计风格
-## 数据逻辑在内部管理，保持与原版相同的公开 API 接口
-
-# ===== 设计令牌（参考 LVMO_GAME 设计系统） =====
-const C_ACCENT := Color(0.376, 0.804, 1.0)        # #60cdff
-const C_ACCENT_HOVER := Color(0.231, 0.718, 0.941)
-const C_BG_ACRYLIC := Color(0.918, 0.929, 0.961, 0.78)
-const C_BG_CARD := Color(1.0, 1.0, 1.0, 0.35)
-const C_BG_CARD_HOVER := Color(1.0, 1.0, 1.0, 0.50)
-const C_BORDER := Color(0.0, 0.078, 0.235, 0.12)
-const C_TEXT := Color(0.067, 0.094, 0.153)         # #111827
-const C_TEXT_SEC := Color(0.067, 0.094, 0.153, 0.65)
-const C_TEXT_TER := Color(0.067, 0.094, 0.153, 0.40)
-const C_SUCCESS := Color(0.212, 0.769, 0.239)
-const C_DANGER := Color(0.910, 0.067, 0.137)
-const C_WARNING := Color(0.992, 0.737, 0.251)
-
-# 深色主题
-const C_BG_ACRYLIC_DARK := Color(0.078, 0.098, 0.157, 0.85)
-const C_BG_CARD_DARK := Color(0.157, 0.176, 0.255, 0.55)
-const C_BG_CARD_HOVER_DARK := Color(0.157, 0.176, 0.255, 0.70)
-const C_BORDER_DARK := Color(0.471, 0.706, 1.0, 0.10)
-const C_TEXT_DARK := Color(0.910, 0.929, 0.961)
-const C_TEXT_SEC_DARK := Color(0.784, 0.843, 0.941, 0.65)
-const C_TEXT_TER_DARK := Color(0.706, 0.784, 0.902, 0.40)
-
-const CELL_SIZE := 80
-const ARMOR_CELL_SIZE := 240
-const SLOT_COUNT := 28
-const RADIUS := 7.0
-
-# 品质颜色
-const QUALITY_COLORS := {
-	"green":  Color(0.212, 0.769, 0.239),
-	"blue":   Color(0.255, 0.553, 0.953),
-	"purple": Color(0.624, 0.392, 0.902)
-}
-const QUALITY_LABELS := {
-	"green":  "[普通]",
-	"blue":   "[稀有]",
-	"purple": "[史诗]"
-}
-
-# ===== 背包数据 =====
+# 背包格子数据（普通物品）
 var slots: Array[Dictionary] = []
-var armor_slot: Dictionary = {}
 
-# ===== 拖动系统 =====
+# 装备槽数据（防弹衣）
+var armor_slot: Dictionary = {
+	"name": "",
+	"icon": "",
+	"count": 0,
+	"description": ""
+}
+
+# ===== 拖动系统状态 =====
 var is_dragging: bool = false
-var drag_source_index: int = -1
-var drag_source_is_ammo_box: bool = false
-var drag_item_data: Dictionary = {}
-var drag_preview: Control = null
+var drag_source_index: int = -1          # 源格子索引（-1表示从外部拖入）
+var drag_source_is_ammo_box: bool = false # 是否从弹药箱拖入
+var drag_item_data: Dictionary = {}       # 拖动中的物品数据
+var drag_preview: Control = null           # 拖动预览元素
 
-# ===== 主题状态 =====
-var _dark_mode := true  # 游戏内使用深色
+const SLOT_COUNT: int = 28  # 7x4 格子
+const CELL_SIZE: int = 80
+const ARMOR_CELL_SIZE: int = 240  # 3x3 大格 = 80 * 3
 
-# ===== 节点引用（缓存）=====
-@onready var _grid: GridContainer = $VBox/GridScroll/Grid
-@onready var _armor_container: PanelContainer = $VBox/ArmorRow/ArmorSlot
-
-# ===================================================================
-# 生命周期
-# ===================================================================
-
-func _ready():
+func _ready() -> void:
 	_initialize_slots()
-	refresh()
+	_populate_grid()
+	_populate_armor_slot()
+	
+	# 连接全局输入以处理拖动放下
 	gui_input.connect(_on_inventory_gui_input)
+	
+	# 等待玩家初始化完成后同步弹药数据
+	# 使用协程等待，确保在玩家加入组后再获取
 	_init_ammo_when_ready()
 
-func _process(_delta):
-	if is_dragging and drag_preview:
-		drag_preview.global_position = get_global_mouse_position() - Vector2(40, 40)
-
-# ===================================================================
-# 数据初始化
-# ===================================================================
-
-func _initialize_slots():
-	slots.clear()
-	for i in SLOT_COUNT:
-		slots.append({ "id": i, "name": "", "icon": "", "count": 0,
-			"description": "", "is_ammo": false, "quality": "" })
-	slots[0] = { "id": 0, "name": "7.62x39mm", "icon": "ammo", "count": 0,
-		"description": "步枪弹药（备弹）", "is_ammo": true, "quality": "" }
-	armor_slot = { "name": "防弹衣", "icon": "armor", "count": 1,
-		"description": "增加 50 点护甲", "quality": "" }
-
-func _init_ammo_when_ready():
-	var wait = 0.0
-	while wait < 3.0:
+func _init_ammo_when_ready() -> void:
+	# 等待最多 3 秒，让玩家有时间初始化
+	var wait_time = 0.0
+	var max_wait = 3.0
+	while wait_time < max_wait:
 		await get_tree().process_frame
-		wait += 0.016
-		var p = _get_player()
-		if p:
-			var ammo = _get_reserve_ammo()
-			for s in slots:
-				if s.get("is_ammo") and s.name != "":
-					s.count = ammo
+		wait_time += 0.016  # 大约一帧的时间
+		var player = _get_player()
+		if player:
+			print("[Inventory] 找到玩家，初始化弹药数据")
+			var ammo_count = _get_reserve_ammo()
+			for slot in slots:
+				if slot.get("is_ammo", false) and slot["name"] != "":
+					slot["count"] = ammo_count
+					print("[Inventory] 弹药格初始化为: ", ammo_count)
 					break
 			refresh()
 			return
+	
 	print("[Inventory] 等待超时，未找到玩家")
 
-# ===================================================================
-# 公开 API（保持与原版一致，供外部调用）
-# ===================================================================
-
-func refresh():
-	_populate_grid()
-	_populate_armor_slot()
-
-func get_empty_slot_count() -> int:
-	var c = 0
-	for s in slots:
-		if s.name == "": c += 1
-	return c
-
-func add_item_from_ammo_box(item_data: Dictionary) -> bool:
-	for s in slots:
-		if s.name == item_data.name and s.icon == item_data.icon:
-			s.count += item_data.count
-			_update_after_drop()
-			return true
-	for i in slots.size():
-		if slots[i].name == "":
-			slots[i] = item_data.duplicate(true)
-			slots[i].id = i
-			_update_after_drop()
-			return true
-	return false
-
-func get_ammo_count() -> int:
-	for s in slots:
-		if s.get("is_ammo") and s.name != "":
-			return s.count
-	return 0
-
-func sync_from_player():
-	var p = _get_player()
-	if not p: return
-	var pa = p.get_reserve_ammo()
-	for s in slots:
-		if s.get("is_ammo") and s.name != "":
-			s.count = pa
-			break
-	refresh()
-
-func start_drag_from_ammo_box(item_data: Dictionary):
-	is_dragging = true
-	drag_source_index = -1
-	drag_source_is_ammo_box = true
-	drag_item_data = item_data.duplicate(true)
-	_create_drag_preview()
-
-# ===================================================================
-# UI 构建
-# ===================================================================
-
-func _make_style(bg: Color, border: Color, radius: float = RADIUS) -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = bg
-	s.set_border_width_all(1)
-	s.border_color = border
-	s.set_corner_radius_all(radius)
-	return s
-
-func _populate_grid():
-	if not _grid: return
-	for c in _grid.get_children(): c.queue_free()
-	for i in SLOT_COUNT:
-		_grid.add_child(_create_cell(i))
-
-func _create_cell(idx: int) -> Control:
-	var data = slots[idx]
-	var cell = PanelContainer.new()
-	cell.name = "Slot_%d" % idx
-	cell.custom_minimum_size = Vector2(CELL_SIZE, CELL_SIZE)
-	cell.set_meta("slot_index", idx)
-
-	# Mica/Acrylic Card 风格
-	var bg = C_BG_CARD_DARK if _dark_mode else C_BG_CARD
-	var bdr = C_BORDER_DARK if _dark_mode else C_BORDER
-	if data.name != "" and data.get("quality", "") != "":
-		bdr = _quality_color(data.get("quality", ""))
-	cell.add_theme_stylebox_override("panel", _make_style(bg, bdr))
-
-	var vb := VBoxContainer.new()
-	vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	vb.custom_minimum_size = Vector2(CELL_SIZE - 8, CELL_SIZE - 8)
-	cell.add_child(vb)
-
-	if data.name == "":
-		var hint = Label.new()
-		hint.text = "+"
-		hint.add_theme_font_size_override("font_size", 20)
-		hint.add_theme_color_override("font_color", C_TEXT_TER_DARK if _dark_mode else C_TEXT_TER)
-		vb.add_child(hint)
-	else:
-		var icon = ColorRect.new()
-		icon.custom_minimum_size = Vector2(40, 40)
-		icon.color = _item_color(data.icon, data.get("quality", ""))
-		vb.add_child(icon)
-
-		var nl = Label.new()
-		nl.text = data.name
-		nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		nl.custom_minimum_size = Vector2(CELL_SIZE - 12, 0)
-		nl.add_theme_font_size_override("font_size", 11)
-		nl.add_theme_color_override("font_color", _quality_color(data.get("quality", "")) if data.get("quality", "") != "" else (C_TEXT_DARK if _dark_mode else C_TEXT))
-		vb.add_child(nl)
-
-		if data.count > 1 or data.get("is_ammo"):
-			var cl = Label.new()
-			if data.get("is_ammo"):
-				cl.text = "x" + str(_get_reserve_ammo())
-			else:
-				cl.text = "x" + str(data.count)
-			cl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			cl.add_theme_font_size_override("font_size", 12)
-			cl.add_theme_color_override("font_color", C_WARNING)
-			vb.add_child(cl)
-
-		if data.get("quality", "") != "":
-			var ql = Label.new()
-			ql.text = QUALITY_LABELS.get(data.get("quality", ""), "")
-			ql.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			ql.add_theme_font_size_override("font_size", 9)
-			ql.add_theme_color_override("font_color", _quality_color(data.get("quality", "")))
-			vb.add_child(ql)
-
-	cell.gui_input.connect(_on_slot_gui_input.bind(cell, idx))
-	return cell
-
-func _populate_armor_slot():
-	if not _armor_container: return
-	for c in _armor_container.get_children(): c.queue_free()
-
-	var st = _make_style(
-		Color(0.15, 0.25, 0.45, 0.85) if armor_slot.name != "" else (C_BG_CARD_DARK if _dark_mode else C_BG_CARD),
-		C_ACCENT, RADIUS)
-	st.set_border_width_all(2)
-	_armor_container.add_theme_stylebox_override("panel", st)
-
-	var vb = VBoxContainer.new()
-	vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	_armor_container.add_child(vb)
-
-	if armor_slot.name != "":
-		var ic = ColorRect.new()
-		ic.custom_minimum_size = Vector2(100, 100)
-		ic.color = _item_color(armor_slot.icon, armor_slot.get("quality", ""))
-		vb.add_child(ic)
-
-		var nl = Label.new()
-		nl.text = armor_slot.name
-		nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		nl.add_theme_font_size_override("font_size", 18)
-		nl.add_theme_color_override("font_color", C_TEXT_DARK if _dark_mode else C_TEXT)
-		vb.add_child(nl)
-
-		var dl = Label.new()
-		dl.text = armor_slot.description
-		dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		dl.add_theme_font_size_override("font_size", 13)
-		dl.add_theme_color_override("font_color", C_TEXT_SEC_DARK if _dark_mode else C_TEXT_SEC)
-		dl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		dl.custom_minimum_size = Vector2(ARMOR_CELL_SIZE - 20, 0)
-		vb.add_child(dl)
-	else:
-		var el = Label.new()
-		el.text = "防弹衣槽（空）"
-		el.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		el.add_theme_font_size_override("font_size", 16)
-		el.add_theme_color_override("font_color", C_TEXT_TER_DARK if _dark_mode else C_TEXT_TER)
-		vb.add_child(el)
-
-# ===================================================================
-# 拖动系统
-# ===================================================================
-
-func _on_slot_gui_input(event: InputEvent, _cell: Control, idx: int):
-	if event is InputEventMouseButton:
-		var me = event as InputEventMouseButton
-		if me.button_index == MOUSE_BUTTON_LEFT:
-			if me.pressed: _start_drag(idx, false)
-			else: _end_drag_over_slot(idx)
-	elif event is InputEventMouseMotion and is_dragging:
-		_update_drop_highlight(get_global_mouse_position())
-
-func _on_inventory_gui_input(event: InputEvent):
-	if event is InputEventMouseButton:
-		var me = event as InputEventMouseButton
-		if me.button_index == MOUSE_BUTTON_LEFT and not me.pressed and is_dragging:
-			_cancel_drag()
-
-func _start_drag(idx: int, from_box: bool):
-	var d = slots[idx]
-	if d.name == "": return
-	is_dragging = true
-	drag_source_index = idx
-	drag_source_is_ammo_box = from_box
-	drag_item_data = d.duplicate(true)
-	_create_drag_preview()
-	_set_slot_dimmed(idx, true)
-
-func _create_drag_preview():
-	if drag_preview: drag_preview.queue_free()
-	drag_preview = PanelContainer.new()
-	drag_preview.custom_minimum_size = Vector2(CELL_SIZE, CELL_SIZE)
-	drag_preview.add_theme_stylebox_override("panel", _make_style(
-		C_ACCENT * Color(1,1,1,0.85), Color(1,1,1,1), RADIUS))
-	var vb = VBoxContainer.new()
-	vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	drag_preview.add_child(vb)
-	var ic = ColorRect.new()
-	ic.custom_minimum_size = Vector2(40, 40)
-	ic.color = _item_color(drag_item_data.get("icon", ""), drag_item_data.get("quality", ""))
-	vb.add_child(ic)
-	var lb = Label.new()
-	lb.text = "x" + str(drag_item_data.get("count", 1))
-	lb.add_theme_font_size_override("font_size", 14)
-	lb.add_theme_color_override("font_color", Color.WHITE)
-	vb.add_child(lb)
-	add_child(drag_preview)
-	drag_preview.global_position = get_global_mouse_position() - Vector2(40, 40)
-
-func _end_drag_over_slot(target: int):
-	if not is_dragging: return
-	var td = slots[target]
-	if td.name == "":
-		slots[target] = drag_item_data.duplicate(true)
-		slots[target].id = target
-		if drag_source_index >= 0: _clear_slot(drag_source_index)
-		_update_after_drop()
-	elif td.name == drag_item_data.name and td.icon == drag_item_data.icon:
-		_add_to_slot(target, drag_item_data.count)
-		if drag_source_index >= 0: _clear_slot(drag_source_index)
-		_update_after_drop()
-	else:
-		var tmp = slots[target].duplicate(true)
-		slots[target] = drag_item_data.duplicate(true)
-		slots[target].id = target
-		if drag_source_index >= 0:
-			slots[drag_source_index] = tmp
-			slots[drag_source_index].id = drag_source_index
-		_update_after_drop()
-	_end_drag()
-
-func _add_to_slot(idx: int, amount: int):
-	slots[idx].count += amount
-	if slots[idx].get("is_ammo"):
-		_sync_ammo_to_player()
-
-func _set_slot_dimmed(idx: int, dim: bool):
-	var cell = _grid.get_node_or_null("Slot_%d" % idx) if _grid else null
-	if cell:
-		var bg = Color(0.078, 0.098, 0.157, 0.50) if dim else (C_BG_CARD_DARK if _dark_mode else C_BG_CARD)
-		var st = cell.get_theme_stylebox("panel") as StyleBoxFlat
-		if st: st.bg_color = bg
-
-func _update_drop_highlight(mpos: Vector2):
-	if not _grid: return
-	for i in SLOT_COUNT:
-		var cell = _grid.get_node_or_null("Slot_%d" % i)
-		if not cell: continue
-		var st = cell.get_theme_stylebox("panel") as StyleBoxFlat
-		if not st: continue
-		if cell.get_global_rect().has_point(mpos):
-			var bdr = C_SUCCESS if slots[i].name == drag_item_data.name else C_WARNING
-			st.border_color = bdr
-		else:
-			var d = slots[i]
-			st.border_color = _quality_color(d.get("quality", "")) if d.get("quality", "") != "" else (C_BORDER_DARK if _dark_mode else C_BORDER)
-
-func _update_after_drop():
-	refresh()
-	_sync_ammo_to_player()
-
-func _clear_slot(idx: int):
-	var s = slots[idx]
-	s.name = ""; s.icon = ""; s.count = 0
-	s.description = ""; s.is_ammo = false; s.quality = ""
-
-func _end_drag():
-	is_dragging = false
-	drag_source_index = -1
-	drag_source_is_ammo_box = false
-	drag_item_data = {}
-	if drag_preview: drag_preview.queue_free(); drag_preview = null
-
-func _cancel_drag():
-	if drag_source_index >= 0: _set_slot_dimmed(drag_source_index, false)
-	_end_drag()
-	refresh()
-
-# ===================================================================
-# 玩家数据同步
-# ===================================================================
+func _process(_delta: float) -> void:
+	# 拖动预览跟随鼠标
+	if is_dragging and drag_preview:
+		drag_preview.global_position = get_global_mouse_position() - Vector2(40, 40)
 
 func _get_player() -> Node:
 	return get_tree().get_first_node_in_group("Player")
@@ -408,31 +66,497 @@ func _get_player() -> Node:
 func _get_reserve_ammo() -> int:
 	var p = _get_player()
 	if p and p.has_method("get_reserve_ammo"):
-		return p.get_reserve_ammo()
+		var ammo = p.get_reserve_ammo()
+		print("[Inventory] _get_reserve_ammo() = ", ammo)  # 调试
+		return ammo
+	print("[Inventory] _get_reserve_ammo() - 玩家未找到，返回默认值 90")
 	return 90
 
-func _sync_ammo_to_player():
-	var p = _get_player()
-	if p and p.has_method("set_reserve_ammo"):
-		for s in slots:
-			if s.get("is_ammo") and s.name != "":
-				p.set_reserve_ammo(s.count)
+func _initialize_slots() -> void:
+	slots.clear()
+	for i in range(SLOT_COUNT):
+		slots.append({
+			"id": i,
+			"name": "",
+			"icon": "",
+			"count": 0,
+			"description": "",
+			"is_ammo": false
+		})
+
+	# 普通背包物品（防弹衣已移至独立装备槽）
+	# 注意：这里初始化为0，延迟函数会从玩家读取真实值
+	_add_item("7.62x39mm", "ammo", 0, "步枪弹药（备弹）", true)
+
+	# 初始化装备槽：防弹衣
+	armor_slot = {
+		"name": "防弹衣",
+		"icon": "armor",
+		"count": 1,
+		"description": "增加 50 点护甲"
+	}
+
+func _add_item(item_name: String, icon_type: String, count: int, description: String, is_ammo: bool = false) -> bool:
+	# 先找是否有同类物品（弹药格特殊处理，不叠加）
+	if not is_ammo:
+		for slot in slots:
+			if slot["name"] == item_name:
+				slot["count"] += count
+				return true
+
+	# 弹药：直接找空格子插入
+	for slot in slots:
+		if slot["name"] == "":
+			slot["name"] = item_name
+			slot["icon"] = icon_type
+			slot["count"] = count
+			slot["description"] = description
+			slot["is_ammo"] = is_ammo
+			print("[Inventory] _add_item 添加物品: ", item_name, " x", count, " is_ammo=", is_ammo)
+			return true
+
+	return false
+
+func _populate_grid() -> void:
+	var grid = $VBox/GridScroll/Grid
+	if not grid:
+		return
+
+	# 弹药数量由背包系统管理，不要每次都从玩家覆盖
+	# 只有在消耗弹药时才会同步到玩家
+
+	# 清除旧格子
+	for child in grid.get_children():
+		child.queue_free()
+
+	# 创建新格子
+	for i in range(SLOT_COUNT):
+		var cell = _create_slot_cell(i)
+		grid.add_child(cell)
+
+func _populate_armor_slot() -> void:
+	var armor_container = $VBox/ArmorRow/ArmorSlot
+	if not armor_container:
+		return
+
+	# 清除旧内容
+	for child in armor_container.get_children():
+		child.queue_free()
+
+	# 设置大格样式
+	var style = StyleBoxFlat.new()
+	if armor_slot["name"] != "":
+		style.bg_color = Color(0.15, 0.25, 0.45, 0.95)
+	else:
+		style.bg_color = Color(0.15, 0.15, 0.15, 0.9)
+	style.set_border_width_all(2)
+	style.set_border_color(Color(0.4, 0.6, 0.9, 0.8))
+	style.set_corner_radius_all(6)
+	armor_container.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	armor_container.add_child(vbox)
+
+	if armor_slot["name"] != "":
+		# 装备图标
+		var icon = ColorRect.new()
+		icon.custom_minimum_size = Vector2(100, 100)
+		icon.color = _get_item_color(armor_slot["icon"])
+		vbox.add_child(icon)
+
+		# 装备名称
+		var name_label = Label.new()
+		name_label.text = armor_slot["name"]
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.add_theme_font_size_override("font_size", 18)
+		name_label.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
+		vbox.add_child(name_label)
+
+		# 描述
+		var desc_label = Label.new()
+		desc_label.text = armor_slot["description"]
+		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc_label.add_theme_font_size_override("font_size", 13)
+		desc_label.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8))
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc_label.custom_minimum_size = Vector2(ARMOR_CELL_SIZE - 20, 0)
+		vbox.add_child(desc_label)
+	else:
+		# 空槽提示
+		var empty_label = Label.new()
+		empty_label.text = "防弹衣槽（空）"
+		empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_label.add_theme_font_size_override("font_size", 16)
+		empty_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.5))
+		vbox.add_child(empty_label)
+
+func _create_slot_cell(slot_index: int) -> Control:
+	var cell = PanelContainer.new()
+	cell.name = "Slot_" + str(slot_index)
+	cell.custom_minimum_size = Vector2(CELL_SIZE, CELL_SIZE)
+	cell.set_meta("slot_index", slot_index)
+
+	var data = slots[slot_index]
+
+	# 设置背景样式（根据物品品质设置边框颜色）
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.2, 0.2, 0.9)
+	style.set_border_width_all(2)
+	# 工艺藏品使用品质边框
+	var border_color = Color(0.4, 0.4, 0.4, 0.8)
+	if data["name"] != "" and data.get("quality", "") != "":
+		border_color = _get_item_color(data.get("icon", ""), data.get("quality", ""))
+		style.border_width_left = 3
+		style.border_width_right = 3
+		style.border_width_top = 3
+		style.border_width_bottom = 3
+	style.set_border_color(border_color)
+	style.set_corner_radius_all(4)
+	cell.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.custom_minimum_size = Vector2(CELL_SIZE - 8, CELL_SIZE - 8)
+	cell.add_child(vbox)
+
+	if data["name"] != "":
+		# 物品图标（用颜色方块代替）
+		var icon = ColorRect.new()
+		icon.custom_minimum_size = Vector2(40, 40)
+		var color = _get_item_color(data["icon"], data.get("quality", ""))
+		icon.color = color
+		vbox.add_child(icon)
+
+		# 物品名称（品质颜色显示）
+		var name_label = Label.new()
+		name_label.text = data["name"]
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_label.custom_minimum_size = Vector2(CELL_SIZE - 12, 0)
+		name_label.add_theme_font_size_override("font_size", 11)
+		# 工艺藏品名称使用品质颜色
+		if data.get("quality", "") != "":
+			name_label.add_theme_color_override("font_color", _get_item_color(data["icon"], data["quality"]))
+		else:
+			name_label.add_theme_color_override("font_color", Color(1, 1, 1))
+		vbox.add_child(name_label)
+
+		# 数量（弹药格始终显示，普通物品>1才显示）
+		if data["count"] > 1 or data.get("is_ammo", false):
+			var count_label = Label.new()
+			# 弹药格：始终从玩家实时读取备弹数
+			if data.get("is_ammo", false):
+				count_label.text = "x" + str(_get_reserve_ammo())
+			else:
+				count_label.text = "x" + str(data["count"])
+			count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			count_label.add_theme_font_size_override("font_size", 12)
+			count_label.add_theme_color_override("font_color", Color(1, 0.8, 0))
+			vbox.add_child(count_label)
+		# 显示品质标签（工艺藏品）
+		if data.get("quality", "") != "":
+			var quality_label = Label.new()
+			quality_label.text = _get_quality_label(data.get("quality", ""))
+			quality_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			quality_label.add_theme_font_size_override("font_size", 9)
+			quality_label.add_theme_color_override("font_color", _get_item_color(data["icon"], data["quality"]))
+			vbox.add_child(quality_label)
+	else:
+		# 空格子提示
+		var empty_hint = Label.new()
+		empty_hint.text = "+"
+		empty_hint.add_theme_font_size_override("font_size", 20)
+		empty_hint.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+		vbox.add_child(empty_hint)
+
+	# 连接鼠标信号
+	cell.gui_input.connect(_on_slot_gui_input.bind(cell, slot_index))
+
+	return cell
+
+func _get_quality_label(quality: String) -> String:
+	match quality:
+		"green":
+			return "[普通]"
+		"blue":
+			return "[稀有]"
+		"purple":
+			return "[史诗]"
+		_:
+			return ""
+
+func _get_item_color(icon_type: String, quality: String = "") -> Color:
+	# 如果有品质，优先使用品质颜色
+	if quality != "":
+		var craft_items_script = load("res://scripts/craft_items.gd")
+		if craft_items_script:
+			return craft_items_script.get_quality_color(quality)
+	match icon_type:
+		"heal":
+			return Color(0.2, 0.9, 0.3, 1)   # 绿色
+		"ammo":
+			return Color(0.9, 0.7, 0.2, 1)   # 金色
+		"grenade":
+			return Color(0.3, 0.5, 0.3, 1)   # 深绿
+		"armor":
+			return Color(0.3, 0.5, 0.8, 1)   # 蓝色
+		_:
+			return Color(0.6, 0.6, 0.6, 1)
+
+func refresh() -> void:
+	_populate_grid()
+	_populate_armor_slot()
+
+# ===== 拖动系统 =====
+
+func _on_slot_gui_input(event: InputEvent, _cell: Control, slot_index: int) -> void:
+	if event is InputEventMouseButton:
+		var mouse_event = event as InputEventMouseButton
+		if mouse_event.button_index == MOUSE_BUTTON_LEFT:
+			if mouse_event.pressed:
+				# 开始拖动
+				_start_drag(slot_index, false)
+			else:
+				# 放下物品
+				_end_drag_over_slot(slot_index)
+	elif event is InputEventMouseMotion and is_dragging:
+		# 更新高亮
+		_update_drop_highlight(get_global_mouse_position())
+
+func _on_inventory_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_event = event as InputEventMouseButton
+		if mouse_event.button_index == MOUSE_BUTTON_LEFT and not mouse_event.pressed:
+			if is_dragging:
+				_cancel_drag()
+
+func _start_drag(slot_index: int, from_ammo_box: bool) -> void:
+	var data = slots[slot_index]
+	if data["name"] == "":
+		return
+	
+	is_dragging = true
+	drag_source_index = slot_index
+	drag_source_is_ammo_box = from_ammo_box
+	drag_item_data = data.duplicate(true)
+	
+	# 创建拖动预览
+	_create_drag_preview()
+	
+	# 隐藏原格子物品（用半透明效果）
+	_set_slot_dimmed(slot_index, true)
+
+func start_drag_from_ammo_box(item_data: Dictionary) -> void:
+	# 从弹药箱开始拖动
+	is_dragging = true
+	drag_source_index = -1
+	drag_source_is_ammo_box = true
+	drag_item_data = item_data.duplicate(true)
+	
+	# 创建拖动预览
+	_create_drag_preview()
+
+func _create_drag_preview() -> void:
+	if drag_preview:
+		drag_preview.queue_free()
+	
+	drag_preview = PanelContainer.new()
+	drag_preview.custom_minimum_size = Vector2(80, 80)
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.9, 0.7, 0.2, 0.9)
+	style.set_border_width_all(2)
+	style.set_border_color(Color(1, 1, 1, 1))
+	style.set_corner_radius_all(4)
+	drag_preview.add_theme_stylebox_override("panel", style)
+	
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	drag_preview.add_child(vbox)
+	
+	var icon = ColorRect.new()
+	icon.custom_minimum_size = Vector2(40, 40)
+	icon.color = _get_item_color(drag_item_data.get("icon", ""))
+	vbox.add_child(icon)
+	
+	var label = Label.new()
+	label.text = "x" + str(drag_item_data.get("count", 1))
+	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	vbox.add_child(label)
+	
+	add_child(drag_preview)
+	drag_preview.global_position = get_global_mouse_position() - Vector2(40, 40)
+
+func _end_drag_over_slot(target_index: int) -> void:
+	if not is_dragging:
+		return
+	
+	var target_data = slots[target_index]
+	
+	if target_data["name"] == "":
+		# 目标格子为空，直接移动
+		slots[target_index] = drag_item_data.duplicate(true)
+		slots[target_index]["id"] = target_index
+		
+		# 清空源格子
+		if drag_source_index >= 0:
+			slots[drag_source_index] = {
+				"id": drag_source_index,
+				"name": "",
+				"icon": "",
+				"count": 0,
+				"description": "",
+				"is_ammo": false
+			}
+		
+		_update_after_drop()
+	elif target_data["name"] == drag_item_data["name"] and target_data["icon"] == drag_item_data["icon"]:
+		# 同类物品，叠加
+		_add_to_slot(target_index, drag_item_data["count"])
+		
+		# 清空源格子
+		if drag_source_index >= 0:
+			slots[drag_source_index] = {
+				"id": drag_source_index,
+				"name": "",
+				"icon": "",
+				"count": 0,
+				"description": "",
+				"is_ammo": false
+			}
+		
+		_update_after_drop()
+	else:
+		# 不同类物品，交换位置
+		var temp = slots[target_index].duplicate(true)
+		slots[target_index] = drag_item_data.duplicate(true)
+		slots[target_index]["id"] = target_index
+		
+		if drag_source_index >= 0:
+			slots[drag_source_index] = temp
+			slots[drag_source_index]["id"] = drag_source_index
+		
+		_update_after_drop()
+	
+	_end_drag()
+
+func _add_to_slot(slot_index: int, amount: int) -> void:
+	slots[slot_index]["count"] += amount
+	# 如果是弹药，同步到玩家数据
+	if slots[slot_index].get("is_ammo", false):
+		_sync_ammo_to_player()
+
+func _set_slot_dimmed(slot_index: int, dimmed: bool) -> void:
+	var grid = $VBox/GridScroll/Grid
+	if not grid:
+		return
+	var cell = grid.get_node_or_null("Slot_" + str(slot_index))
+	if cell:
+		var style = cell.get_theme_stylebox("panel") as StyleBoxFlat
+		if style:
+			if dimmed:
+				style.bg_color = Color(0.1, 0.1, 0.1, 0.5)
+			else:
+				style.bg_color = Color(0.2, 0.2, 0.2, 0.9)
+
+func _update_drop_highlight(mouse_pos: Vector2) -> void:
+	var grid = $VBox/GridScroll/Grid
+	if not grid:
+		return
+	
+	for i in range(SLOT_COUNT):
+		var cell = grid.get_node_or_null("Slot_" + str(i))
+		if cell:
+			var style = cell.get_theme_stylebox("panel") as StyleBoxFlat
+			if style:
+				if cell.get_global_rect().has_point(mouse_pos):
+					# 高亮目标格子
+					if slots[i]["name"] == drag_item_data["name"]:
+						style.border_color = Color(0.2, 0.9, 0.3, 1)  # 绿色表示可叠加
+					else:
+						style.border_color = Color(0.9, 0.7, 0.2, 1)  # 黄色表示可放置
+				else:
+					style.border_color = Color(0.4, 0.4, 0.4, 0.8)  # 恢复默认
+
+func _update_after_drop() -> void:
+	refresh()
+	_sync_ammo_to_player()
+
+func _sync_ammo_to_player() -> void:
+	var player = _get_player()
+	if player and player.has_method("set_reserve_ammo"):
+		# 弹药同步：slot["count"] 直接同步到玩家（slot 已经是增量后的值）
+		for slot in slots:
+			if slot.get("is_ammo", false) and slot["name"] != "":
+				print("[Inventory] _sync_ammo_to_player 同步弹药: ", slot["count"])
+				player.set_reserve_ammo(slot["count"])
 				break
 
-# ===================================================================
-# 颜色工具
-# ===================================================================
+# 从玩家同步弹药数据到背包（用于换弹时调用）
+func sync_from_player() -> void:
+	var player = _get_player()
+	if not player:
+		return
+	var player_ammo = player.get_reserve_ammo()
+	for slot in slots:
+		if slot.get("is_ammo", false) and slot["name"] != "":
+			slot["count"] = player_ammo
+			print("[Inventory] sync_from_player 同步弹药格为: ", player_ammo)
+			break
+	refresh()
 
-func _quality_color(q: String) -> Color:
-	return QUALITY_COLORS.get(q, C_ACCENT)
+func _end_drag() -> void:
+	is_dragging = false
+	drag_source_index = -1
+	drag_source_is_ammo_box = false
+	drag_item_data = {}
+	
+	if drag_preview:
+		drag_preview.queue_free()
+		drag_preview = null
 
-func _item_color(icon_type: String, quality: String = "") -> Color:
-	if quality != "":
-		var ci = load("res://scripts/craft_items.gd")
-		if ci: return ci.get_quality_color(quality)
-	match icon_type:
-		"heal":    return Color(0.2, 0.9, 0.3)
-		"ammo":    return Color(0.9, 0.7, 0.2)
-		"grenade": return Color(0.3, 0.5, 0.3)
-		"armor":   return Color(0.3, 0.5, 0.8)
-		_:         return Color(0.6, 0.6, 0.6)
+func _cancel_drag() -> void:
+	# 恢复源格子
+	if drag_source_index >= 0:
+		_set_slot_dimmed(drag_source_index, false)
+	
+	_end_drag()
+	refresh()
+
+# 获取可以接收物品的格子数量
+func get_empty_slot_count() -> int:
+	var count = 0
+	for slot in slots:
+		if slot["name"] == "":
+			count += 1
+	return count
+
+# 添加物品到背包（从弹药箱）
+func add_item_from_ammo_box(item_data: Dictionary) -> bool:
+	# 先尝试叠加
+	for slot in slots:
+		if slot["name"] == item_data["name"] and slot["icon"] == item_data["icon"]:
+			slot["count"] += item_data["count"]
+			_update_after_drop()
+			return true
+	
+	# 找空格子
+	for i in range(slots.size()):
+		if slots[i]["name"] == "":
+			slots[i] = item_data.duplicate(true)
+			slots[i]["id"] = i
+			_update_after_drop()
+			return true
+	
+	return false
+
+# 获取弹药数量
+func get_ammo_count() -> int:
+	for slot in slots:
+		if slot.get("is_ammo", false) and slot["name"] != "":
+			print("[Inventory] get_ammo_count() 返回: ", slot["count"])
+			return slot["count"]
+	print("[Inventory] get_ammo_count() 未找到弹药格，返回 0")
+	return 0

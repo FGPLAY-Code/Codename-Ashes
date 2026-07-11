@@ -93,6 +93,16 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "行动"
 
+[node name="ModeButton" type="Button" parent="CenterPanel/VBox" unique_id=466628317]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "模式：离线"
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+
 [node name="AccountButton" type="Button" parent="." unique_id=466628400]
 anchors_preset = 2
 anchor_top = 1.0
@@ -106,6 +116,7 @@ custom_minimum_size = Vector2(160, 50)
 text = "⚙ 账户设置"
 
 [connection signal="pressed" from="CenterPanel/VBox/ActionButton" to="." method="_on_action_button_pressed"]
+[connection signal="pressed" from="CenterPanel/VBox/ModeButton" to="." method="_on_mode_button_pressed"]
 [connection signal="pressed" from="AccountButton" to="." method="_on_account_button_pressed"]
 
 [node name="AccountPopup" type="PanelContainer" parent="." unique_id=466628500]

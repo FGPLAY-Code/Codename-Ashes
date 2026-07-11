@@ -7,10 +7,9 @@
 [ext_resource type="PackedScene" uid="uid://cj2mrlk1x4h41" path="res://scenes/Enemy.tscn" id="5_e1085"]
 [ext_resource type="PackedScene" path="res://scenes/AmmoBox.tscn" id="7_ammo"]
 [ext_resource type="PackedScene" path="res://scenes/StorageBox.tscn" id="8_storage_box"]
-[ext_resource type="PackedScene" uid="uid://3so40yh2wwh2" path="res://scenes/ExtractionZone.tscn" id="9_extraction"]
-[ext_resource type="Script" path="res://scripts/spread_ctrl.gd" id="10_spread"]
-[ext_resource type="Script" path="res://scripts/weapon_ctrl.gd" id="11_weapon"]
-[ext_resource type="Resource" path="res://resources/weapons/AKM.tres" id="12_akm"]
+[ext_resource type="PackedScene" uid="uid://52ol2c3recynu" path="res://scenes/ExtractionZone.tscn" id="9_extraction"]
+[ext_resource type="Script" path="res://scripts/network/multiplayer_game.gd" id="10_mpgame"]
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(500, 1, 500)
 
@@ -52,13 +51,6 @@ script = ExtResource("1_player")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1895095042]
 shape = SubResource("CapsuleShape3D_player")
-
-[node name="SpreadController" type="Node" parent="Player"]
-script = ExtResource("10_spread")
-
-[node name="WeaponController" type="Node" parent="Player"]
-script = ExtResource("11_weapon")
-weapon_data = ExtResource("12_akm")
 
 [node name="CameraPivot" type="Node3D" parent="Player" unique_id=1399092998]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
@@ -137,5 +129,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58.020218, 0.3, -94.44372)
 
 [node name="StorageBox8" parent="." unique_id=443337941 instance=ExtResource("8_storage_box")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.015213, 0.3, 97.11348)
+
+[node name="MultiplayerGame" type="Node" parent="." unique_id=555123456]
+script = ExtResource("10_mpgame")
 
 [node name="SpawnRoot" type="Node3D" parent="." unique_id=555123457]

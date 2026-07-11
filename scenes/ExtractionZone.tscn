@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://ex7kp2vqm4r8t"]
+[gd_scene load_steps=10 format=3 uid="uid://52ol2c3recynu"]
 
 [ext_resource type="Script" path="res://scripts/extraction_point.gd" id="1_extract"]
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://storage_box_001"]
+[gd_scene load_steps=2 format=3 uid="uid://uk9pwgc2flzw6"]
 
 [ext_resource type="Script" path="res://scripts/storage_box.gd" id="1"]
 [ext_resource type="PackedScene" path="res://models/储物盒.glb" id="2"]

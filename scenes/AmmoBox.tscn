@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://ammo_box_001"]
+[gd_scene load_steps=2 format=3 uid="uid://ye4a0ln7484ab"]
 
 [ext_resource type="Script" path="res://scripts/ammo_box.gd" id="1"]
 [ext_resource type="PackedScene" path="res://models/ammo_box.glb" id="2_ammo"]

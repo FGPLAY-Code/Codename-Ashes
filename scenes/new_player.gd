@@ -45,8 +45,8 @@ func _create_player() -> void:
 	# 保存玩家数据
 	save_player_data()
 	
-	# 跳转到主场景
-	get_tree().change_scene_to_file("res://scenes/AshRavine.tscn")
+	# 跳转到基地（由 GameStart 决定在线/离线模式）
+	get_tree().change_scene_to_file("res://scenes/GameStart.tscn")
 
 func save_player_data() -> void:
 	var config = ConfigFile.new()

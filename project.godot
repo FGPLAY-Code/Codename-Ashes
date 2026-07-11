@@ -15,10 +15,9 @@ run/main_scene="res://scenes/Start.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
-[display]
+[autoload]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
+NetworkManager="*res://scripts/network/network_manager.gd"
 
 [dotnet]
 
@@ -105,4 +104,5 @@ toggle_fire_mode={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
