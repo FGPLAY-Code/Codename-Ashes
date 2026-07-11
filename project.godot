@@ -15,14 +15,14 @@ run/main_scene="res://scenes/Start.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
-[dotnet]
-
-project/assembly_name="绿洲行动 Demo"
-
 [display]
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
+
+[dotnet]
+
+project/assembly_name="绿洲行动 Demo"
 
 [input]
 
