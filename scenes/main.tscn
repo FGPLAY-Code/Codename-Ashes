@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bwc6j8moyyfhx" path="res://scripts/player.gd" id="1_o5qli"]
 [ext_resource type="PackedScene" uid="uid://ctnx0m2na88b4" path="res://resources/Models/灰烬峡谷Demo1.0.0.glb" id="2_0wfyh"]
-[ext_resource type="PackedScene" uid="uid://uk9pwgc2flzw6" path="res://scenes/StorageBox.tscn" id="3_storage"]
+[ext_resource type="PackedScene" uid="uid://storage_box_001" path="res://scenes/StorageBox.tscn" id="3_storage"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_0wfyh"]
 size = Vector3(500, 1, 500)

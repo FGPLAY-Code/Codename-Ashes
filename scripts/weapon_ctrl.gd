@@ -74,6 +74,34 @@ func _ready():
 	emit_signal("ammo_changed", _ammo, _w_mag(), _reserve_ammo)
 	emit_signal("fire_mode_changed", _fire_mode)
 
+# ===================================================================
+# 武器切换（由 player.gd 调用）
+# ===================================================================
+
+func switch_to_weapon(wd: WeaponData, model: Node3D, saved_ammo: int = -1, saved_reserve: int = -1) -> void:
+	weapon_data = wd
+	_weapon_model = model
+	_ammo = saved_ammo if saved_ammo >= 0 else _w_mag()
+	_reserve_ammo = saved_reserve if saved_reserve >= 0 else _w_res()
+	_bloom = 0.0
+	_fire_cooldown = 0.0
+	_is_reloading = false
+	_fire_mode = "AUTO"
+	
+	# 重新设置音效
+	_setup_gun_sound()
+	
+	# 同步到 SpreadController
+	var sc = get_node_or_null("../SpreadController")
+	if sc:
+		sc.weapon_data = wd
+	
+	emit_signal("ammo_changed", _ammo, _w_mag(), _reserve_ammo)
+	emit_signal("fire_mode_changed", _fire_mode)
+	emit_signal("reload_state_changed", false)
+
+# ===================================================================
+
 func _physics_process(delta: float):
 	if _fire_cooldown > 0.0:
 		_fire_cooldown -= delta
@@ -136,6 +164,10 @@ func start_reload():
 		return
 	_is_reloading = true
 	emit_signal("reload_state_changed", true)
+	
+	# 播放换弹音效
+	_play_reload_sound()
+	
 	await get_tree().create_timer(1.5).timeout
 	if _is_reloading:
 		var needed = cap - _ammo
@@ -240,7 +272,9 @@ func _apply_recoil(crouching: bool, ads: bool):
 	if _camera_pivot != null:
 		_camera_pivot.rotate_x(kick)
 	if _weapon_model == null:
-		_weapon_model = get_node_or_null("../CameraPivot/WeaponPivot/AKM_Model")
+		var pivot = get_node_or_null("../CameraPivot/WeaponPivot")
+		if pivot and pivot.get_child_count() > 0:
+			_weapon_model = pivot.get_child(0) as Node3D
 	if _weapon_model != null:
 		var recoil_offset = Vector3(randf() * 0.01 - 0.005, kick * 0.3, kick * 0.5)
 		var tween = create_tween()
@@ -297,3 +331,17 @@ func _setup_gun_sound():
 func _play_gun_sound():
 	if _gun_audio != null and _gun_audio.stream != null:
 		_gun_audio.play()
+
+func _play_reload_sound():
+	var wname = weapon_data.weapon_name.to_lower() if weapon_data else "akm"
+	var path = "res://resources/mp3/" + wname + "_reload.mp3"
+	if not ResourceLoader.exists(path):
+		return
+	var sound = load(path)
+	if sound != null:
+		var sp = AudioStreamPlayer.new()
+		sp.stream = sound
+		sp.bus = "Master"
+		add_child(sp)
+		sp.play()
+		sp.finished.connect(sp.queue_free)

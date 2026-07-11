@@ -163,6 +163,8 @@ func _disable_glb_collisions(node: Node) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	# 同步 GLB 模型
 	if glb_node:
 		# 基础变换 = 初始偏移（相对父节点）

@@ -4,13 +4,8 @@ const SAVE_FILE_PATH = "user://player_data.cfg"
 const AMMO_PRICE_PER_30 = 30000
 const AMMO_PRICE_PER_BULLET = 100
 
-# 联机模式状态
-enum Mode { OFFLINE, CONNECTING, ONLINE }
-var current_mode: int = Mode.OFFLINE
-
 @onready var cash_label: Label = %CashLabel
 @onready var action_button: Button = %ActionButton
-@onready var mode_button: Button = %ModeButton
 @onready var player_name_label: Label = %PlayerNameLabel
 @onready var account_popup: PanelContainer = $AccountPopup
 @onready var name_edit: LineEdit = $AccountPopup/VBox/NameEdit
@@ -22,10 +17,6 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	load_player_data()
 	_update_display()
-	_update_mode_button()
-
-func _has_network_manager() -> bool:
-	return get_node_or_null("/root/NetworkManager") != null
 
 func load_player_data() -> void:
 	var config = ConfigFile.new()
@@ -78,97 +69,11 @@ func _update_display() -> void:
 	else:
 		push_error("GameStart: PlayerNameLabel 节点未找到")
 
-# ================================================================
-# 模式按钮逻辑
-# ================================================================
-
-func _update_mode_button() -> void:
-	if not is_instance_valid(mode_button):
-		return
-	mode_button.disabled = false
-	match current_mode:
-		Mode.OFFLINE:
-			mode_button.text = "模式：离线"
-			mode_button.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
-		Mode.CONNECTING:
-			mode_button.text = "模式：连接中..."
-			mode_button.disabled = true
-			mode_button.add_theme_color_override("font_color", Color(1, 0.8, 0.2))
-		Mode.ONLINE:
-			mode_button.text = "模式：在线"
-			mode_button.add_theme_color_override("font_color", Color(0.3, 0.6, 1))
-
-func _on_mode_button_pressed() -> void:
-	if current_mode == Mode.ONLINE:
-		_disconnect_from_server()
-		return
-	if current_mode == Mode.CONNECTING:
-		return
-	_try_connect_to_server()
-
-func _try_connect_to_server() -> void:
-	_set_mode(Mode.CONNECTING)
-	if not _has_network_manager():
-		push_error("[GameStart] NetworkManager 未找到，请先将其添加为 AutoLoad")
-		_set_mode(Mode.OFFLINE)
-		return
-	_test_server_http()
-
-func _test_server_http() -> void:
-	var server_http: String = "http://160.202.47.159:3000"  # 兜底地址
-	if _has_network_manager():
-		var nm = get_node("/root/NetworkManager")
-		if "SERVER_HTTP" in nm:
-			server_http = nm.SERVER_HTTP
-	
-	var http = HTTPRequest.new()
-	http.timeout = 5.0
-	add_child(http)
-	http.request_completed.connect(_on_http_test_completed.bind(http))
-	var err = http.request(server_http + "/api/ping")
-	if err != OK:
-		_on_http_test_completed(0, 0, PackedStringArray(), PackedByteArray())
-
-func _on_http_test_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray, http_request: Variant = null) -> void:
-	if is_instance_valid(mode_button):
-		mode_button.disabled = false
-	if response_code == 200:
-		_set_mode(Mode.ONLINE)
-		print("[GameStart] 服务器连接成功！")
-	else:
-		_set_mode(Mode.OFFLINE)
-		print("[GameStart] 服务器连接失败（code=", response_code, "），保持离线模式")
-	if http_request and is_instance_valid(http_request):
-		http_request.queue_free()
-
-func _set_mode(m: int) -> void:
-	current_mode = m
-	_update_mode_button()
-
-func _disconnect_from_server() -> void:
-	if _has_network_manager():
-		var nm = get_node("/root/NetworkManager")
-		if nm and nm.has_method("disconnect_from_server"):
-			nm.disconnect_from_server()
-		print("[GameStart] 已断开与服务器的连接")
-	_set_mode(Mode.OFFLINE)
-
-# ================================================================
-# 原有逻辑
-# ================================================================
-
 func _on_action_button_pressed() -> void:
 	if action_button:
 		action_button.disabled = true
-	
-	# 根据当前模式决定跳转目标
-	if current_mode == Mode.OFFLINE:
-		# 离线模式：直接进入游戏（单人）
-		_clear_inventory_cache()
-		get_tree().change_scene_to_file("res://scenes/AshRavine.tscn")
-	else:
-		# 在线模式：先选择游玩模式
-		get_tree().change_scene_to_file("res://scenes/GameSelect.tscn")
+	_clear_inventory_cache()
+	get_tree().change_scene_to_file("res://scenes/AshRavine.tscn")
 
 func _clear_inventory_cache() -> void:
 	var config = ConfigFile.new()

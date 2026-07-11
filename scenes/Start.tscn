@@ -1,12 +1,11 @@
-[gd_scene format=3 uid="uid://dq6dsncbfutfq"]
+[gd_scene load_steps=2 format=3 uid="uid://start_scene_001"]
 
-[ext_resource type="Script" uid="uid://dwmga8garfuep" path="res://scenes/Start.gd" id="1_start"]
+[ext_resource type="Script" path="res://scenes/Start.gd" id="1_start"]
 
-[node name="Start" type="Control" unique_id=935350082]
+[node name="Start" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+grow_anchors_preset = 2
 script = ExtResource("1_start")

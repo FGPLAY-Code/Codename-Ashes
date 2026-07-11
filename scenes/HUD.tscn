@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://kve80hccs1do7"]
+[gd_scene format=3 uid="uid://hud001"]
 
 [ext_resource type="Script" path="res://scripts/inventory.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/hud.gd" id="2"]
@@ -7,17 +7,17 @@
 visible = false
 script = ExtResource("2")
 
-[node name="HealthPanel" type="Control" parent="."]
+[node name="HealthPanel" type="PanelContainer" parent="."]
 layout_mode = 3
 anchors_preset = 0
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 260.0
-offset_bottom = 60.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 220.0
+offset_bottom = 68.0
 grow_horizontal = 1
 grow_vertical = 1
 mouse_filter = 2
@@ -28,36 +28,52 @@ anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 0.0
-offset_bottom = 0.0
-grow_horizontal = 1
-grow_vertical = 1
+offset_left = 30.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -24.0
 min_value = 0.0
 max_value = 100.0
 value = 100.0
 show_percentage = false
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/font_shadow_offset_x = 1
-theme_override_constants/font_shadow_offset_y = 1
+theme_override_colors/font_color = Color(0.910, 0.929, 0.961, 1.0)
 
-[node name="HealthLabel" type="Label" parent="HealthPanel"]
+[node name="HealthFillClip" type="Panel" parent="HealthPanel"]
 layout_mode = 1
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 0.0
-offset_bottom = 0.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
+offset_left = 30.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -24.0
+mouse_filter = 2
+clip_contents = true
+
+[node name="HealthFill" type="TextureRect" parent="HealthPanel/HealthFillClip"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+stretch_mode = 0
+
+[node name="HealthLabel" type="Label" parent="HealthPanel"]
+layout_mode = 1
+anchor_left = 29.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 22.0
+offset_right = -8.0
+offset_bottom = -6.0
+theme_override_colors/font_color = Color(0.0, 0.0, 0.0, 1.0)
 theme_override_font_sizes/font_size = 18
 text = "100 / 100"
-horizontal_alignment = 1
+horizontal_alignment = 2
 vertical_alignment = 1
 mouse_filter = 2
 
@@ -127,16 +143,51 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -140.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = 80.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 96.0
 grow_horizontal = 0
+mouse_filter = 2
 
-[node name="AmmoLabel" type="Label" parent="AmmoPanel"]
+[node name="AmmoCountLabel" type="Label" parent="AmmoPanel"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "30 / 90"
+offset_left = 8.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = 46.0
+theme_override_colors/font_color = Color(0.910, 0.929, 0.961, 1.0)
+theme_override_font_sizes/font_size = 36
+text = "30"
 horizontal_alignment = 2
+vertical_alignment = 2
+mouse_filter = 2
+
+[node name="AmmoReserveLabel" type="Label" parent="AmmoPanel"]
+layout_mode = 2
+offset_left = 8.0
+offset_top = 44.0
+offset_right = -8.0
+offset_bottom = 64.0
+theme_override_colors/font_color = Color(0.784, 0.843, 0.941, 0.55)
+theme_override_font_sizes/font_size = 14
+text = "/  90"
+horizontal_alignment = 2
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="RoundTypeLabel" type="Label" parent="AmmoPanel"]
+layout_mode = 2
+offset_left = 8.0
+offset_top = 62.0
+offset_right = -8.0
+offset_bottom = 0.0
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.706, 0.784, 0.902, 0.40)
+theme_override_font_sizes/font_size = 10
+text = "7.62x39mm"
+horizontal_alignment = 2
+vertical_alignment = 2
+mouse_filter = 2
 
 [node name="ReloadHint" type="Label" parent="."]
 visible = false
@@ -152,10 +203,9 @@ offset_right = 100.0
 offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 28
-text = "RELOADING..."
+theme_override_colors/font_color = Color(0.910, 0.929, 0.961, 0.80)
+theme_override_font_sizes/font_size = 22
+text = "换弹中..."
 horizontal_alignment = 1
 
 [node name="IronSightCrosshair" type="Control" parent="."]
@@ -302,6 +352,17 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 20
 text = "搜索"
 
+[node name="MicaBackdrop" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.078, 0.098, 0.157, 0.65)
+mouse_filter = 2
+
 [node name="InventoryPanel" type="PanelContainer" parent="."]
 visible = false
 script = ExtResource("1")
@@ -363,6 +424,17 @@ theme_override_font_sizes/font_size = 16
 text = "按 Tab 或 ESC 关闭"
 horizontal_alignment = 1
 
+[node name="SearchMicaBackdrop" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.078, 0.098, 0.157, 0.65)
+mouse_filter = 2
+
 [node name="SearchPanel" type="PanelContainer" parent="."]
 visible = false
 layout_mode = 3
@@ -372,9 +444,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -400.0
-offset_top = -200.0
+offset_top = -240.0
 offset_right = 400.0
-offset_bottom = 200.0
+offset_bottom = 240.0
 grow_horizontal = 2
 grow_vertical = 2
 
