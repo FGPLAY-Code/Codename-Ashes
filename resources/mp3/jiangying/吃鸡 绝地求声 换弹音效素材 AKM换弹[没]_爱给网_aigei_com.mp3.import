@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cild8jdb1a00e"
+path="res://.godot/imported/吃鸡 绝地求声 换弹音效素材 AKM换弹[没]_爱给网_aigei_com.mp3-8cf0312fefd88ee1b3419eea4406f3b9.mp3str"
+
+[deps]
+
+source_file="res://resources/mp3/jiangying/吃鸡 绝地求声 换弹音效素材 AKM换弹[没]_爱给网_aigei_com.mp3"
+dest_files=["res://.godot/imported/吃鸡 绝地求声 换弹音效素材 AKM换弹[没]_爱给网_aigei_com.mp3-8cf0312fefd88ee1b3419eea4406f3b9.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

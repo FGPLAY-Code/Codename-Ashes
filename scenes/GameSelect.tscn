@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/GameSelect.gd" id="1_gselect"]
+[ext_resource type="PackedScene" uid="uid://1ysryz2g407ch" path="res://scenes/ErrorPopup.tscn" id="2_epopup"]
+
+[node name="GameSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gselect")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.08, 0.1, 1)
+
+[node name="CenterPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterPanel"]
+layout_mode = 2
+theme_override_constants/separation = 25
+
+[node name="TitleLabel" type="Label" parent="CenterPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 24
+text = "选择游玩模式"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="CenterPanel/VBox"]
+layout_mode = 2
+
+[node name="OfflineButton" type="Button" parent="CenterPanel/VBox"]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "离线游玩"
+
+[node name="OnlineButton" type="Button" parent="CenterPanel/VBox"]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "在线游玩"
+
+[node name="BackButton" type="Button" parent="CenterPanel/VBox"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "返回"
+
+[node name="StatusLabel" type="Label" parent="CenterPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 14
+text = ""
+horizontal_alignment = 1
+
+[connection signal="pressed" from="CenterPanel/VBox/OfflineButton" to="." method="_on_offline_button_pressed"]
+[connection signal="pressed" from="CenterPanel/VBox/OnlineButton" to="." method="_on_online_button_pressed"]
+[connection signal="pressed" from="CenterPanel/VBox/BackButton" to="." method="_on_back_button_pressed"]
+
+[node name="ErrorPopup" parent="." instance=ExtResource("2_epopup")]
+visible = false

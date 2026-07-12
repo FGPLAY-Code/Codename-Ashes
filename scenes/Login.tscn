@@ -1,0 +1,137 @@
+[gd_scene format=3 uid="uid://b5vlufcgfpu4x"]
+
+[ext_resource type="Script" path="res://scripts/network/login_ui.gd" id="1_script"]
+
+[node name="LoginUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.1, 0.15, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -250.0
+offset_right = 200.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_styles/panel = null
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+text = "绿洲行动 - 登录"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="TabContainer" type="TabContainer" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(400, 350)
+
+[node name="登录" type="ScrollContainer" parent="CenterContainer/Panel/VBox/TabContainer"]
+layout_mode = 2
+vertical_scroll_mode = 0
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel/VBox/TabContainer/登录"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="UsernameLabel" type="Label" parent="CenterContainer/Panel/VBox/TabContainer/登录/VBox"]
+layout_mode = 2
+text = "用户名"
+
+[node name="UsernameInput" type="LineEdit" parent="CenterContainer/Panel/VBox/TabContainer/登录/VBox"]
+layout_mode = 2
+placeholder_text = "请输入用户名"
+
+[node name="PasswordLabel" type="Label" parent="CenterContainer/Panel/VBox/TabContainer/登录/VBox"]
+layout_mode = 2
+text = "密码"
+
+[node name="PasswordInput" type="LineEdit" parent="CenterContainer/Panel/VBox/TabContainer/登录/VBox"]
+layout_mode = 2
+placeholder_text = "请输入密码"
+secret = true
+
+[node name="LoginBtn" type="Button" parent="CenterContainer/Panel/VBox/TabContainer/登录/VBox"]
+layout_mode = 2
+text = "登录"
+
+[node name="ErrorLabel" type="Label" parent="CenterContainer/Panel/VBox/TabContainer/登录/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+modulate = Color(1, 0.2, 0.2, 1)
+
+[node name="注册" type="ScrollContainer" parent="CenterContainer/Panel/VBox/TabContainer"]
+layout_mode = 2
+vertical_scroll_mode = 0
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel/VBox/TabContainer/注册"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="UsernameLabel" type="Label" parent="CenterContainer/Panel/VBox/TabContainer/注册/VBox"]
+layout_mode = 2
+text = "用户名"
+
+[node name="UsernameInput" type="LineEdit" parent="CenterContainer/Panel/VBox/TabContainer/注册/VBox"]
+layout_mode = 2
+placeholder_text = "请输入用户名"
+
+[node name="PasswordLabel" type="Label" parent="CenterContainer/Panel/VBox/TabContainer/注册/VBox"]
+layout_mode = 2
+text = "密码"
+
+[node name="PasswordInput" type="LineEdit" parent="CenterContainer/Panel/VBox/TabContainer/注册/VBox"]
+layout_mode = 2
+placeholder_text = "请输入密码（至少6位）"
+secret = true
+
+[node name="ConfirmLabel" type="Label" parent="CenterContainer/Panel/VBox/TabContainer/注册/VBox"]
+layout_mode = 2
+text = "确认密码"
+
+[node name="ConfirmInput" type="LineEdit" parent="CenterContainer/Panel/VBox/TabContainer/注册/VBox"]
+layout_mode = 2
+placeholder_text = "请再次输入密码"
+secret = true
+
+[node name="RegisterBtn" type="Button" parent="CenterContainer/Panel/VBox/TabContainer/注册/VBox"]
+layout_mode = 2
+text = "注册"
+
+[node name="ErrorLabel" type="Label" parent="CenterContainer/Panel/VBox/TabContainer/注册/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+modulate = Color(1, 0.2, 0.2, 1)
+
+[node name="StatusLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 14
+modulate = Color(0.8, 0.8, 0.8, 1)
+text = "准备连接..."

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://scripts/WeaponData.gd" id="1_wd"]
+
+[resource]
+script = ExtResource("1_wd")
+weapon_name = "AKM"
+display_name = "AK-47"
+stand_spread_deg = 3.0
+crouch_spread_mult = 0.35
+ads_spread_mult = 0.35
+move_spread_mult = 1.6
+vert_mult = 0.8
+base_damage = 25.0
+magazine_capacity = 30
+reserve_ammo_start = 90
+fire_rate_auto = 0.08
+fire_rate_semi = 0.15
+recoil_kick = 0.03
+bloom_per_shot = 0.15
+bloom_recovery = 0.6
+head_bottom_offset = 4.0
+head_top_offset = 4.5
+gun_sound_path = "res://resources/mp3/ak_gunshot.mp3"

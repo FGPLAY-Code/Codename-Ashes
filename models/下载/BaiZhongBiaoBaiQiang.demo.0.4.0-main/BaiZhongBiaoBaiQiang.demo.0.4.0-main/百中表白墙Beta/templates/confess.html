@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发表表白 - 百中表白墙</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+            min-height: 100vh;
+        }
+        
+        /* 导航栏样式 */
+        .navbar {
+            background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(255, 154, 158, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 2rem;
+        }
+        
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            color: #ff6b6b;
+        }
+        
+        /* 主内容区 */
+        .container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        /* 表白表单 */
+        .confess-form {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-group {
+            margin-bottom: 2rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            border: 2px solid #f5f5f5;
+            border-radius: 8px;
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-textarea:focus {
+            outline: none;
+            border-color: #ff9a9e;
+            box-shadow: 0 0 0 3px rgba(255, 154, 158, 0.1);
+        }
+        
+        /* 按钮组 */
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+            box-shadow: 0 4px 10px rgba(255, 154, 158, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 154, 158, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 手机号验证弹窗样式 */
+        .verify-overlay {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .verify-overlay.hidden {
+            display: none;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .verify-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .verify-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .verify-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .verify-subtitle {
+            color: #999;
+            font-size: 0.9rem;
+        }
+        
+        .verify-form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .verify-form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .verify-form-input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .verify-form-input:focus {
+            outline: none;
+            border-color: #ff9a9e;
+            box-shadow: 0 0 0 3px rgba(255, 154, 158, 0.1);
+        }
+        
+        .verify-btn-group {
+            display: flex;
+            gap: 0.8rem;
+        }
+        
+        .verify-get-code-btn {
+            flex: 1;
+            padding: 0.9rem 1rem;
+            border: 2px solid #ff9a9e;
+            border-radius: 12px;
+            background: white;
+            color: #ff9a9e;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .verify-get-code-btn:hover:not(:disabled) {
+            background: rgba(255, 154, 158, 0.1);
+        }
+        
+        .verify-get-code-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .verify-submit-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 154, 158, 0.3);
+        }
+        
+        .verify-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 154, 158, 0.4);
+        }
+        
+        .verify-error {
+            display: none;
+            background: #fff5f5;
+            color: #ff6b6b;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .verify-error.show {
+            display: block;
+        }
+        
+        .verify-success {
+            display: none;
+            background: #f0fff4;
+            color: #52c41a;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .verify-success.show {
+            display: block;
+        }
+        
+        /* 已验证标识 */
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #f0fff4;
+            color: #52c41a;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .verified-badge svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+            
+            .navbar-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .nav-links li {
+                margin: 0 1rem;
+            }
+            
+            .container {
+                margin: 1rem auto;
+            }
+            
+            .confess-form {
+                padding: 1.5rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo">百中表白墙</a>
+            <ul class="nav-links">
+                <li><a href="/confess">表白</a></li>
+                {% if is_admin %}
+                <li class="font-selector">
+                    <button class="font-btn">字体</button>
+                    <div class="font-dropdown">
+                        <form method="POST" action="/admin/change-font">
+                            <input type="hidden" name="font" value="default">
+                            <button type="submit">默认字体</button>
+                        </form>
+                        <form method="POST" action="/admin/change-font">
+                            <input type="hidden" name="font" value="kaiti">
+                            <button type="submit">楷体</button>
+                        </form>
+                        <form method="POST" action="/admin/change-font">
+                            <input type="hidden" name="font" value="xkaiti">
+                            <button type="submit">行楷</button>
+                        </form>
+                        <form method="POST" action="/admin/change-font">
+                            <input type="hidden" name="font" value="stxingkai">
+                            <button type="submit">行书</button>
+                        </form>
+                    </div>
+                </li>
+                <li><a href="/admin">管理员后台</a></li>
+                <li><a href="/admin/logout">登出</a></li>
+                {% else %}
+                <li><a href="/admin/login">管理员</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    
+    <style>
+        /* 字体选择器样式 */
+        .font-selector {
+            position: relative;
+        }
+        
+        .font-btn {
+            background: transparent;
+            border: none;
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .font-btn:hover {
+            color: #ff6b6b;
+        }
+        
+        .font-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+            min-width: 120px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .font-selector:hover .font-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .font-dropdown form {
+            margin: 0;
+        }
+        
+        .font-dropdown button {
+            display: block;
+            width: 100%;
+            padding: 0.8rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+        }
+        
+        .font-dropdown button:hover {
+            background: rgba(255, 154, 158, 0.1);
+            padding-left: 2rem;
+        }
+        
+        /* 字体样式定义 */
+        body.font-kaiti {
+            font-family: 'KaiTi', '楷体', serif;
+        }
+        
+        body.font-xkaiti {
+            font-family: 'STKaiti', '华文楷体', serif;
+        }
+        
+        body.font-stxingkai {
+            font-family: 'STXingkai', '华文行楷', cursive;
+        }
+    </style>
+    
+    <!-- 手机验证弹窗 -->
+    <div class="verify-overlay" id="verifyOverlay">
+        <div class="verify-modal">
+            <div class="verify-header">
+                <div class="verify-title">手机验证</div>
+                <div class="verify-subtitle">请先完成手机验证才能发布表白</div>
+            </div>
+            <div class="verify-error" id="verifyError"></div>
+            <div class="verify-success" id="verifySuccess"></div>
+            <div class="verify-form-group">
+                <label class="verify-form-label">手机号</label>
+                <input type="tel" class="verify-form-input" id="verifyPhone" placeholder="请输入手机号" maxlength="11">
+            </div>
+            <div class="verify-form-group">
+                <label class="verify-form-label">验证码</label>
+                <div class="verify-btn-group">
+                    <input type="text" class="verify-form-input" id="verifyCode" placeholder="请输入验证码" maxlength="6">
+                    <button type="button" class="verify-get-code-btn" id="verifyGetCodeBtn">获取验证码</button>
+                </div>
+            </div>
+            <button type="button" class="verify-submit-btn" id="verifySubmitBtn">验证</button>
+        </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="container">
+        <form class="confess-form" id="confessForm" method="POST" action="/confess">
+            <div id="verifiedBadgeContainer"></div>
+            <div class="form-group">
+                <label for="content" class="form-label">表白内容</label>
+                <textarea id="content" name="content" class="form-textarea" placeholder="在这里写下你的表白..."></textarea>
+            </div>
+            <div class="btn-group">
+                <a href="/" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-primary">发表</button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // 应用服务器传递的字体
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentFont = '{{ current_font }}';
+            if (currentFont && currentFont !== 'default') {
+                document.body.className = 'font-' + currentFont;
+            }
+            
+            // 检查是否已验证
+            checkVerification();
+        });
+        
+        // 检查验证状态
+        async function checkVerification() {
+            try {
+                const response = await fetch('/check_verification');
+                const data = await response.json();
+                if (data.verified) {
+                    hideVerifyOverlay();
+                    showVerifiedBadge(data.phone);
+                } else {
+                    showVerifyOverlay();
+                }
+            } catch (error) {
+                console.error('检查验证状态失败:', error);
+            }
+        }
+        
+        // 显示验证弹窗
+        function showVerifyOverlay() {
+            document.getElementById('verifyOverlay').classList.remove('hidden');
+        }
+        
+        // 隐藏验证弹窗
+        function hideVerifyOverlay() {
+            document.getElementById('verifyOverlay').classList.add('hidden');
+        }
+        
+        // 显示已验证标识
+        function showVerifiedBadge(phone) {
+            const container = document.getElementById('verifiedBadgeContainer');
+            container.innerHTML = `
+                <div class="verified-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    已验证: ${phone}
+                </div>
+            `;
+        }
+        
+        // 获取验证码
+        let countdown = 0;
+        document.getElementById('verifyGetCodeBtn').addEventListener('click', async function() {
+            const phone = document.getElementById('verifyPhone').value.trim();
+            
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showVerifyError('请输入正确的手机号');
+                return;
+            }
+            
+            if (countdown > 0) return;
+            
+            this.disabled = true;
+            countdown = 60;
+            updateCountdown();
+            
+            try {
+                const response = await fetch('/send_code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone: phone })
+                });
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    showVerifySuccess('验证码已发送，请注意查收');
+                } else {
+                    showVerifyError(data.msg || '发送失败，请重试');
+                    countdown = 0;
+                    this.disabled = false;
+                    this.textContent = '获取验证码';
+                }
+            } catch (error) {
+                showVerifyError('发送失败，请重试');
+                countdown = 0;
+                this.disabled = false;
+                this.textContent = '获取验证码';
+            }
+        });
+        
+        // 倒计时更新
+        function updateCountdown() {
+            const btn = document.getElementById('verifyGetCodeBtn');
+            if (countdown > 0) {
+                btn.textContent = countdown + '秒后重试';
+                countdown--;
+                setTimeout(updateCountdown, 1000);
+            } else {
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+            }
+        }
+        
+        // 提交验证
+        document.getElementById('verifySubmitBtn').addEventListener('click', async function() {
+            const phone = document.getElementById('verifyPhone').value.trim();
+            const code = document.getElementById('verifyCode').value.trim();
+            
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showVerifyError('请输入正确的手机号');
+                return;
+            }
+            
+            if (!/^\d{6}$/.test(code)) {
+                showVerifyError('请输入6位验证码');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/verify_code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone: phone, code: code })
+                });
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    showVerifySuccess('验证成功');
+                    setTimeout(() => {
+                        hideVerifyOverlay();
+                        showVerifiedBadge(phone);
+                    }, 1500);
+                } else {
+                    showVerifyError(data.msg || '验证失败');
+                }
+            } catch (error) {
+                showVerifyError('验证失败，请重试');
+            }
+        });
+        
+        // 显示错误
+        function showVerifyError(message) {
+            const error = document.getElementById('verifyError');
+            const success = document.getElementById('verifySuccess');
+            error.textContent = message;
+            error.classList.add('show');
+            success.classList.remove('show');
+        }
+        
+        // 显示成功
+        function showVerifySuccess(message) {
+            const success = document.getElementById('verifySuccess');
+            const error = document.getElementById('verifyError');
+            success.textContent = message;
+            success.classList.add('show');
+            error.classList.remove('show');
+        }
+        
+        // 表单提交
+        document.getElementById('confessForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const content = document.getElementById('content').value.trim();
+            if (!content) {
+                alert('请输入表白内容');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/confess', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ content: content })
+                });
+                
+                if (response.status === 401) {
+                    const data = await response.json();
+                    alert(data.msg);
+                    showVerifyOverlay();
+                    return;
+                }
+                
+                // 如果成功，页面会重定向
+                window.location.href = '/';
+            } catch (error) {
+                alert('发布失败，请重试');
+            }
+        });
+    </script>
+</body>
+</html>

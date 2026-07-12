@@ -1,0 +1,98 @@
+[gd_scene format=3 uid="uid://tslsy8fxa054"]
+
+[ext_resource type="PackedScene" uid="uid://b4wdkj2rv6t8k" path="res://resources/Models/Plants/山/丘陵_1.00.glb" id="1_1qtl1"]
+[ext_resource type="PackedScene" uid="uid://mtedt7tlcsn7" path="res://resources/Models/Plants/山/丘陵_2.00.glb" id="2_40jfh"]
+[ext_resource type="PackedScene" uid="uid://1mikjyqxkbtb" path="res://resources/Models/Plants/山/平山_1.00.glb" id="3_6bhk8"]
+[ext_resource type="Script" uid="uid://bwc6j8moyyfhx" path="res://scripts/player.gd" id="4_kxv44"]
+[ext_resource type="Script" uid="uid://t0583o7abgoa" path="res://scripts/spread_ctrl.gd" id="5_e0x3u"]
+[ext_resource type="Script" uid="uid://c6gj71n1cujw2" path="res://scripts/weapon_ctrl.gd" id="6_1qwms"]
+[ext_resource type="Resource" path="res://resources/weapons/AKM.tres" id="7_6w704"]
+[ext_resource type="Script" uid="uid://c2rple7moiqkw" path="res://scripts/enemy_spawner.gd" id="8_1qwms"]
+[ext_resource type="PackedScene" uid="uid://cj2mrlk1x4h41" path="res://scenes/Enemy.tscn" id="9_6w704"]
+[ext_resource type="Script" uid="uid://ddjucsgg1dd72" path="res://scripts/test_collision.gd" id="10_trimesh"]
+[ext_resource type="PackedScene" uid="uid://3so40yh2wwh2" path="res://scenes/ExtractionZone.tscn" id="11_2qkej"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_2qkej"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_kxv44"]
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_kxv44")
+
+[sub_resource type="Environment" id="Environment_e0x3u"]
+background_mode = 2
+sky = SubResource("Sky_main")
+
+[node name="Main" type="Node3D" unique_id=138289760]
+
+[node name="Forest-Groud" type="Node3D" parent="." unique_id=21204185]
+script = ExtResource("10_trimesh")
+
+[node name="convert" parent="Forest-Groud" unique_id=278471619 instance=ExtResource("1_1qtl1")]
+transform = Transform3D(-20, 0, -3.019916e-06, 0, 20, 0, 3.019916e-06, 0, -20, 0.52707195, 0.73198724, 0.20561981)
+
+[node name="convert2" parent="Forest-Groud" unique_id=745330154 instance=ExtResource("2_40jfh")]
+transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, -0.6537216, -1.5027587, 42.97703)
+
+[node name="convert3" parent="Forest-Groud" unique_id=588323930 instance=ExtResource("3_6bhk8")]
+transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0, 0, 28.834335)
+
+[node name="convert4" parent="Forest-Groud" unique_id=1483098089 instance=ExtResource("3_6bhk8")]
+transform = Transform3D(-8.742278e-07, 0, -20, 0, 20, 0, 20, 0, -8.742278e-07, 15.467247, -0.03778124, 27.829206)
+
+[node name="convert5" parent="Forest-Groud" unique_id=1142783349 instance=ExtResource("3_6bhk8")]
+transform = Transform3D(-20, 0, -3.019916e-06, 0, 20, 0, 3.019916e-06, 0, -20, 0.2631817, -0.005690217, 14.954468)
+
+[node name="convert6" parent="Forest-Groud" unique_id=1245815534 instance=ExtResource("3_6bhk8")]
+transform = Transform3D(-8.742278e-07, 0, 20, 0, 20, 0, -20, 0, -8.742278e-07, 15.549675, 0, 11.570463)
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1959533810]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.966264, 13.154457)
+collision_layer = 2
+script = ExtResource("4_kxv44")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1627280493]
+shape = SubResource("CapsuleShape3D_2qkej")
+
+[node name="SpreadController" type="Node" parent="Player" unique_id=2015490801]
+script = ExtResource("5_e0x3u")
+
+[node name="WeaponController" type="Node" parent="Player" unique_id=559280619]
+script = ExtResource("6_1qwms")
+weapon_data = ExtResource("7_6w704")
+
+[node name="CameraPivot" type="Node3D" parent="Player" unique_id=2140669927]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Player/CameraPivot" unique_id=1922120919]
+current = true
+fov = 70.0
+near = 0.1
+far = 1000.0
+
+[node name="RayCast3D" type="RayCast3D" parent="Player/CameraPivot/Camera3D" unique_id=680769263]
+target_position = Vector3(0, 0, -100)
+collision_mask = 2
+
+[node name="GunMuzzle" type="Node3D" parent="Player/CameraPivot/Camera3D" unique_id=655407128]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.2, -0.5)
+
+[node name="InteractRaycast" type="RayCast3D" parent="Player/CameraPivot/Camera3D" unique_id=1685921897]
+target_position = Vector3(0, 0, -100)
+collision_mask = 4
+
+[node name="WeaponPivot" type="Node3D" parent="Player/CameraPivot" unique_id=178376692]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1829313721]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1949850550]
+environment = SubResource("Environment_e0x3u")
+
+[node name="EnemySpawner" type="Node3D" parent="." unique_id=1892120847]
+script = ExtResource("8_1qwms")
+enemy_scene = ExtResource("9_6w704")
+
+[node name="ExtractionZone" parent="." unique_id=229563345 instance=ExtResource("11_2qkej")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0, -60)
