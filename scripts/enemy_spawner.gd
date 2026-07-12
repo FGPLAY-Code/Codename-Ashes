@@ -1,63 +1,87 @@
 extends Node3D
 
 @export var enemy_scene: PackedScene
-@export var spawn_interval: float = 5.0
-@export var min_distance: float = 30.0
-@export var max_distance: float = 50.0
-@export var max_enemies: int = 10
-@export var spawn_radius: float = 200.0
-@export var despawn_distance: float = 100.0
 
-var current_enemies: int = 0
+## 突袭模式：初始生成数量
+@export var raid_spawn_count: int = 8
+
+## 突袭模式：生成半径（以地图原点为中心）
+@export var spawn_radius: float = 40.0
+
+## 突袭模式：最小生成间距（避免敌人叠在一起）
+@export var min_spacing: float = 8.0
+
 var player: Node3D = null
-var spawn_timer: float = 0.0
 
 func _ready():
 	await get_tree().process_frame
 	player = get_tree().get_first_node_in_group("Player")
 	if player == null:
 		push_warning("敌人生成器找不到玩家！确保玩家已添加到 'Player' 组")
+	
+	# 开始新突袭：清空旧敌人 + 生成新一批
+	call_deferred("initialize_raid")
 
-func _process(delta):
-	if player == null:
-		player = get_tree().get_first_node_in_group("Player")
-		if player == null:
-			return
+## 初始化新一局突袭
+func initialize_raid():
+	# 清空所有旧敌人
+	_clear_all_enemies()
+	
+	# 生成新敌人
+	_spawn_raid_enemies()
+	
+	print("[Raid] 突袭初始化完成，生成 ", raid_spawn_count, " 个敌人")
 
-	if not is_instance_valid(player) or not player.is_inside_tree():
-		return
+## 清空地图上所有敌人
+func _clear_all_enemies():
+	var all_enemies = get_tree().get_nodes_in_group("Enemy")
+	for e in all_enemies:
+		if is_instance_valid(e) and e.is_inside_tree():
+			e.queue_free()
+	print("[Raid] 已清空 ", all_enemies.size(), " 个旧敌人")
 
-	spawn_timer += delta
-	if spawn_timer >= spawn_interval and current_enemies < max_enemies:
-		spawn_timer = 0.0
-		spawn_enemy()
-
-func spawn_enemy():
+## 在随机位置生成一批敌人
+func _spawn_raid_enemies():
 	if enemy_scene == null:
 		push_warning("敌人生成器没有设置 enemy_scene！")
 		return
-
-	if player == null or not is_instance_valid(player):
-		return
-
-	var distance = randf_range(min_distance, max_distance)
-	var angle = randf() * TAU
-	var offset = Vector3(cos(angle) * distance, 0, sin(angle) * distance)
-
-	var spawn_pos = player.global_position + offset
-	spawn_pos.y = 0  # 确保在地面
-
-	# 先添加到场景树
-	var enemy = enemy_scene.instantiate()
-	get_tree().root.add_child(enemy)
 	
-	# 然后设置位置
-	enemy.global_position = spawn_pos
+	var spawned_positions: Array[Vector3] = []
 	
-	enemy.tree_exited.connect(_on_enemy_removed)
+	for i in range(raid_spawn_count):
+		var pos = _find_valid_spawn_pos(spawned_positions)
+		if pos == null:
+			continue
+		
+		var enemy = enemy_scene.instantiate()
+		get_tree().root.add_child(enemy)
+		enemy.global_position = pos
+		
+		# 添加到 Enemy 组（如果还没加）
+		if not enemy.is_in_group("Enemy"):
+			enemy.add_to_group("Enemy")
+		
+		spawned_positions.append(pos)
 	
-	current_enemies += 1
-	print("生成敌人，当前数量: ", current_enemies)
+	print("[Raid] 已生成 ", spawned_positions.size(), " 个敌人")
 
-func _on_enemy_removed():
-	current_enemies = max(0, current_enemies - 1)
+## 寻找一个有效的生成位置
+func _find_valid_spawn_pos(used: Array[Vector3]) -> Vector3:
+	var attempts = 0
+	while attempts < 30:
+		attempts += 1
+		var angle = randf() * TAU
+		var dist = randf_range(15.0, spawn_radius)
+		var pos = Vector3(cos(angle) * dist, 0, sin(angle) * dist)
+		
+		# 检查距离已有生成点是否足够远
+		var valid = true
+		for p in used:
+			if pos.distance_to(p) < min_spacing:
+				valid = false
+				break
+		
+		if valid:
+			return pos
+	
+	return Vector3.ZERO
